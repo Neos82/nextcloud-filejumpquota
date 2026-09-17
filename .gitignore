@@ -1,0 +1,11 @@
+*.bak
+*.backup
+*.pre-*
+*.before-*
+*.log
+*~
+.DS_Store
+
+config/default-quota
+secrets/
+credentials/

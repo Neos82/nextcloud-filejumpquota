@@ -1,0 +1,82 @@
+#!/bin/bash
+
+set -euo pipefail
+
+NC_CONTAINER="nextcloud-aio-nextcloud"
+DEFAULT_FILE="/opt/nextcloud-aio/filejumpquota-config/default-quota"
+
+if ! docker ps --format '{{.Names}}' | grep -qx "$NC_CONTAINER"; then
+    echo "ERRORE: container $NC_CONTAINER non attivo."
+    exit 1
+fi
+
+if [ ! -f "$DEFAULT_FILE" ]; then
+    echo "ERRORE: quota DEFAULT non configurata."
+    exit 1
+fi
+
+DEFAULT_QUOTA=$(tr -d '[:space:]' < "$DEFAULT_FILE")
+
+USERS_JSON=$(docker exec --user www-data "$NC_CONTAINER" \
+    php occ user:list --limit=0 --info --output=json)
+
+echo
+echo "================================================================================================================="
+echo " FileJump - Quote utenti"
+echo "================================================================================================================="
+echo
+echo "Quota DEFAULT globale: $DEFAULT_QUOTA"
+echo
+
+printf "%-42s %-12s %-10s %-12s\n" \
+    "UTENTE" "EFFETTIVA" "TIPO" "NEXTCLOUD"
+
+printf "%-42s %-12s %-10s %-12s\n" \
+    "------------------------------------------" \
+    "------------" \
+    "----------" \
+    "------------"
+
+while IFS=$'\t' read -r USER_ID NC_QUOTA; do
+
+    CUSTOM_QUOTA=""
+
+    if CUSTOM_QUOTA=$(docker exec --user www-data "$NC_CONTAINER" \
+        php occ user:setting \
+        "$USER_ID" \
+        filejumpquota \
+        custom_quota \
+        2>/dev/null); then
+
+        CUSTOM_QUOTA=$(echo "$CUSTOM_QUOTA" | tr -d '[:space:]')
+        CUSTOM_QUOTA=$(echo "$CUSTOM_QUOTA" | tr '[:lower:]' '[:upper:]')
+    else
+        CUSTOM_QUOTA=""
+    fi
+
+    if [ -n "$CUSTOM_QUOTA" ]; then
+        EFFECTIVE="$CUSTOM_QUOTA"
+        TYPE="CUSTOM"
+    else
+        EFFECTIVE="$DEFAULT_QUOTA"
+        TYPE="DEFAULT"
+    fi
+
+    printf "%-42s %-12s %-10s %-12s\n" \
+        "$USER_ID" \
+        "$EFFECTIVE" \
+        "$TYPE" \
+        "$NC_QUOTA"
+
+done < <(
+    echo "$USERS_JSON" |
+    jq -r '
+        to_entries[]
+        | select(.value.enabled == true)
+        | select(.key != "admin")
+        | [.key, (.value.quota // "N/D")]
+        | @tsv
+    '
+)
+
+echo

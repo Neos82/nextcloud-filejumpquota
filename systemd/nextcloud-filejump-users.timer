@@ -1,0 +1,12 @@
+[Unit]
+Description=Controllo periodico utenti Nextcloud per FileJump
+
+[Timer]
+OnActiveSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Persistent=true
+Unit=nextcloud-filejump-users.service
+
+[Install]
+WantedBy=timers.target
