@@ -73,7 +73,7 @@ docker exec -i --user www-data   -e FJQ_UID="$USER_ID"   "$CONTAINER" php <<'PHP
 require '/var/www/html/lib/base.php';
 
 $uid = getenv('FJQ_UID');
-$root = \\OC::$server->get(\\OCP\\Files\\IRootFolder::class);
+$root = \OC::$server->get(\OCP\Files\IRootFolder::class);
 
 try {
     $userFolder = $root->getUserFolder($uid);
@@ -81,7 +81,7 @@ try {
     $storage = $node->getStorage();
 
     $present = $storage->instanceOfStorage(
-        \\OCA\\FileJumpQuota\\Storage\\FileJumpQuota::class
+        \OCA\FileJumpQuota\Storage\FileJumpQuota::class
     );
 
     echo $present
@@ -89,7 +89,7 @@ try {
         : "[ERRORE] FileJumpQuota wrapper NON PRESENTE\n";
 
     exit($present ? 0 : 1);
-} catch (\\Throwable $e) {
+} catch (\Throwable $e) {
     echo "[ERRORE] " . $e->getMessage() . "\n";
     exit(1);
 }
