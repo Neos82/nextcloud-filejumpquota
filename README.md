@@ -2,6 +2,12 @@
 
 FileJumpQuota is a custom quota management system for Nextcloud AIO.
 
+Current release: **1.1.0**
+
+Compatibility:
+- Nextcloud 34
+- Nextcloud 35
+
 It provides quota enforcement for the external storage mount:
 
 `FileJump-Personale`
@@ -26,3 +32,4 @@ Nextcloud container:
 
 ```text
 nextcloud-aio-nextcloud
+```
